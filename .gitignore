@@ -64,3 +64,8 @@ docker-compose.override.yml
 
 # Logs
 *.log
+
+# Maven build output
+target/
+
+.github/copilot-instructions.md

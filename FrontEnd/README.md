@@ -1,7 +1,7 @@
 # AskCart FrontEnd
 
 # Requirements
-* Node 22+.
+* Node v22+.
 
 # To start development server
 * npm run dev.

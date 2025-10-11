@@ -9,8 +9,7 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": "./",
     "paths": {
-      "@/components/*": ["src/components/*"],
-      "@/pages/*": ["src/pages/*"]
+      "@/*": ["src/*"]
     },
 
     /* Bundler mode */

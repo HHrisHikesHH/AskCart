@@ -6,5 +6,6 @@ import reactor.core.publisher.Mono;
 
 public interface ProductRepository extends R2dbcRepository<Product, Long> {
     Mono<Product> findById(Long id);
+
     Mono<Void> deleteById(Long id);
 }

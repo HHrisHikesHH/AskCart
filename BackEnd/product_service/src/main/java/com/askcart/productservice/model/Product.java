@@ -1,7 +1,7 @@
 package com.askcart.productservice.model;
 
-import org.springframework.data.annotation.Id;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 
 @Data
 public class Product {

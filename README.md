@@ -1,14 +1,13 @@
-# 🛒 AI-Powered E-Commerce Platform (FastAPI + React + Kafka)
-
+# 🛒 AI-Powered E-Commerce Platform (Spring Boot + React + Kafka)
 ## 📖 Overview
 
-This project is a **modular, microservices-based e-commerce platform** built with **FastAPI**, **Kafka**, and **React**.
+This project is a **modular, microservices-based e-commerce platform** built with **SpringBoot**, **Kafka**, and **React**.
 It blends **traditional shopping** (browsing, cart, checkout) with **conversational AI** for a modern, interactive experience.
 
 The architecture follows a **clean separation of concerns**:
 
 * **Frontend Layer:** React (web) & React Native (mobile)
-* **Backend (BFF + Microservices):** FastAPI microservices
+* **Backend (BFF + Microservices):** Spring Boot microservices (API Gateway, Product Service)
 * **Event Streaming:** Kafka for async event flow & saga orchestration
 * **RAG Layer:** Vector DB for semantic product and FAQ search
 * **Monitoring:** Prometheus, Grafana, and ELK stack for observability
@@ -21,11 +20,11 @@ The architecture follows a **clean separation of concerns**:
   <br/>
   <em>Figure: High-level system architecture</em>
 </p>
----
+<hr />
 
 ## ⚙️ Features
 
-* 🧩 **Modular microservices**: each handles a specific domain (Product, Cart, Order, etc.)
+* 🧩 Modular microservices: API Gateway, Product Service, with plans for Cart, Order, etc.
 * ⚡ **Asynchronous event flow** via Kafka (event-driven architecture)
 * 🔒 **JWT-based authentication**
 * 🧠 **AI product assistant** using RAG and LLM orchestrator
@@ -45,13 +44,13 @@ The architecture follows a **clean separation of concerns**:
 * React, TailwindCSS, React Query, Zustand
 * React Native for mobile
 
-**Backend (FastAPI):**
+**Backend (Spring Boot):**
 
-* FastAPI (async Python framework)
-* SQLAlchemy + asyncpg (Postgres ORM)
+* Spring Boot (Java framework)
+* Spring Data JPA (Postgres ORM)
 * Redis (cache/sessions)
-* aiokafka (Kafka integration)
-* Pydantic (validation & serialization)
+* Spring Kafka (Kafka integration)
+* Spring Security (JWT authentication)
 
 **Infra & DevOps:**
 
@@ -66,19 +65,16 @@ The architecture follows a **clean separation of concerns**:
 ## 🧱 Folder Structure
 
 ```
-ecommerce/
-├── infra/
-│   └── docker-compose.yml     # Kafka, Redis, Postgres setup
-├── services/
-│   ├── product/               # Product catalog microservice
-│   ├── cart/                  # Cart & session microservice
-│   ├── order/                 # Order service (Saga orchestrator)
-│   ├── payments/              # Payment processing
-│   ├── notification/          # Email/SMS/Push
-│   └── personalization/       # AI-driven recommendations
-└── frontend/
-    ├── web/                   # React web app
-    └── mobile/                # React Native app
+AskCart/
+├── BackEnd/
+│   ├── api_gateway/           # API Gateway microservice
+│   └── product_service/      # Product catalog microservice
+├── FrontEnd/
+│   ├── web/                  # React web app
+│   └── mobile/               # React Native app
+├── docs/                     # Architecture diagrams
+└── docker-compose.yml        # Kafka, Redis, Postgres setup
+
 ```
 
 ---
@@ -88,9 +84,9 @@ ecommerce/
 ### 1. Clone and start infrastructure
 
 ```bash
-git clone https://github.com/<your-org>/ecommerce-fastapi.git
-cd ecommerce/infra
-docker-compose up -d
+git clone https://github.com/HHrisHikesHH/AskCart.git
+cd AskCart
+docker-compose up -d --profile dev
 ```
 
 This will start:
@@ -100,32 +96,54 @@ This will start:
 * Kafka on `localhost:9092`
 * Zookeeper on `localhost:2181`
 
-### 2. Run the Product Service
+### 2. Run Services Locally (Development)
+
+Open api_gateway and product_service in IntelliJ.
+Set environment variable: SPRING_PROFILES_ACTIVE=docker.
+Run each service for hot reloading.
+
+### 3. Run Full Application (Production)
+mvn clean package
+docker-compose up --build --profile prod
 
 ```bash
-cd ../services/product
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+API Gateway: http://localhost:8000
 ```
 
-### 3. Open API Docs
+```bash
+Product Service: http://localhost:8001
+```
+# 📦 Environment Variables
 
-Visit `http://localhost:8000/docs` to explore REST endpoints.
 
----
 
-## 📦 Environment Variables
+Variable
+Description
+Default
 
-| Variable          | Description                | Default                                                           |
-| ----------------- | -------------------------- | ----------------------------------------------------------------- |
-| `DATABASE_URL`    | Postgres connection string | `postgresql+asyncpg://postgres:postgres@localhost:5432/ecommerce` |
-| `KAFKA_BOOTSTRAP` | Kafka broker address       | `localhost:9092`                                                  |
-| `REDIS_URL`       | Redis connection URL       | `redis://localhost:6379`                                          |
-| `JWT_SECRET`      | Secret for JWT auth        | `changeme`                                                        |
 
-Create a `.env` file in each service directory for local configuration.
 
----
+SPRING_DATASOURCE_URL
+Postgres connection string
+jdbc:postgresql://postgres:5432/db
+
+
+SPRING_KAFKA_BOOTSTRAP
+Kafka broker address
+kafka:9092
+
+
+SPRING_REDIS_HOST
+Redis host
+redis
+
+
+JWT_SECRET
+Secret for JWT auth
+changeme
+
+
+Configure in application.yml for each service or via environment variables.
 
 ## 🧮 Event Flow Example (Order Saga)
 
@@ -173,9 +191,8 @@ The **LLM Orchestrator** connects product search, FAQs, and reviews to an extern
 ---
 
 ## 🧪 Testing
-
 ```bash
-pytest -v --asyncio-mode=auto
+mvn test
 ```
 
 Tests include:
@@ -198,7 +215,7 @@ Tests include:
 ## 🤝 Contributing
 
 1. Fork the repo & create a feature branch
-2. Run tests and lint (`black`, `ruff`, `pytest`)
+2. Run tests and lint (mvn checkstyle:check, mvn test)
 3. Open a PR with clear commit messages
 
 ---
@@ -211,7 +228,7 @@ MIT License — feel free to use and modify for your own learning or projects.
 
 ## 💡 Future Enhancements
 
-* Add API Gateway (Kong / Traefik) with centralized JWT validation
+* Add more microservices (Cart, Order, Inventory, etc.)
 * Improve AI Orchestrator (multi-turn chat + semantic search)
 * Integrate vector embeddings for user behavior
 * Add OpenTelemetry tracing in Kafka event headers

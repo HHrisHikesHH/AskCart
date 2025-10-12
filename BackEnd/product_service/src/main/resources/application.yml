@@ -1,0 +1,47 @@
+server:
+  port: 8000  # Internal port (mapped to 8001 externally)
+spring:
+  application:
+    name: product-service
+  r2dbc:
+    url: r2dbc:postgresql://postgres:5432/db
+    username: user
+    password: pass
+  data:
+    redis:
+      host: redis
+      port: 6379
+    kafka:
+      bootstrap-servers: kafka:9092
+      producer:
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      consumer:
+        group-id: askcart-group
+        auto-offset-reset: earliest
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+        properties:
+          spring:
+            json:
+              trusted:
+                packages: com.askcart.*
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 10
+        queue-capacity: 100
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+logging:
+  level:
+    com.askcart: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

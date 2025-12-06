@@ -1,37 +1,60 @@
+# =========================
+# 🧱 PRODUCT SERVICE
+# =========================
 server:
-  port: 8000  # Internal port (mapped to 8001 externally)
+  port: 8001  # Internal port (mapped externally if using Docker)
+
 spring:
   application:
     name: product-service
+
   r2dbc:
-    url: r2dbc:postgresql://postgres:5432/db
+    # 🔧 Local setup
+    url: r2dbc:postgresql://localhost:5432/db
     username: user
     password: pass
+
+    # 🐳 Docker / Production (uncomment when deploying)
+    # url: r2dbc:postgresql://postgres:5432/db
+
   data:
     redis:
-      host: redis
+      # 🔧 Local setup
+      host: localhost
+
+      # 🐳 Docker / Production (uncomment when deploying)
+      # host: redis
       port: 6379
-    kafka:
-      bootstrap-servers: kafka:9092
-      producer:
-        key-serializer: org.apache.kafka.common.serialization.StringSerializer
-        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      consumer:
-        group-id: askcart-group
-        auto-offset-reset: earliest
-        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-        value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-        properties:
-          spring:
-            json:
-              trusted:
-                packages: com.askcart.*
+
+  kafka:
+    # 🔧 Local setup
+    bootstrap-servers: localhost:29092
+
+    # 🐳 Docker / Production (uncomment when deploying)
+    # bootstrap-servers: kafka:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      group-id: askcart-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: com.askcart.*
+
   task:
     execution:
       pool:
         core-size: 2
         max-size: 10
         queue-capacity: 100
+
 management:
   endpoints:
     web:
@@ -40,6 +63,7 @@ management:
   endpoint:
     health:
       show-details: always
+
 logging:
   level:
     com.askcart: DEBUG

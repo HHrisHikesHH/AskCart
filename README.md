@@ -1,235 +1,192 @@
-# 🛒 AI-Powered E-Commerce Platform (Spring Boot + React + Kafka)
-## 📖 Overview
+# 🛒 AskCart - AI-Powered E-Commerce Platform
 
-This project is a **modular, microservices-based e-commerce platform** built with **SpringBoot**, **Kafka**, and **React**.
-It blends **traditional shopping** (browsing, cart, checkout) with **conversational AI** for a modern, interactive experience.
+AskCart is a microservices-based e-commerce platform that integrates **Conversational AI (RAG)** for a smart shopping experience. It features a distributed architecture using **Spring Boot**, **Kafka**, **PostgreSQL**, **Redis**, and **Vector DB (Milvus)**.
 
-The architecture follows a **clean separation of concerns**:
+## 🏗️ Architecture Overview
 
-* **Frontend Layer:** React (web) & React Native (mobile)
-* **Backend (BFF + Microservices):** Spring Boot microservices (API Gateway, Product Service)
-* **Event Streaming:** Kafka for async event flow & saga orchestration
-* **RAG Layer:** Vector DB for semantic product and FAQ search
-* **Monitoring:** Prometheus, Grafana, and ELK stack for observability
+| Service | Port | Description | DB |
+| :--- | :--- | :--- | :--- |
+| **API Gateway** | `8000` | Unified entry point for all client requests | - |
+| **Product Service** | `8001` | Manages product catalog and emits `product.events` | PostgreSQL |
+| **Cart Service** | `8002` | Manages user carts and session state | Redis |
+| **Order Service** | `8003` | Handles order placement and lifecycle | PostgreSQL |
+| **AI Service** | `8004` | RAG-based AI assistant for product queries (vector ingestion) | Milvus |
+
+## 🚀 Quick Start Guide
+
+### Prerequisites
+- Java 21+
+- Maven 3.8+
+- Docker & Docker Compose
+
+### 1. Start Infrastructure
+Start the required databases, message brokers, and infrastructure containers (Postgres, Redis, Kafka, Zookeeper, MinIO, Milvus).
+
+```bash
+docker compose --profile dev up -d
+```
+> **Note:** Kafka is accessible locally on port `29092` and internally on `9092`.
+
+### 2. Build the Project
+Build all microservices and generate JAR files.
+
+```bash
+mvn clean install -DskipTests
+```
+
+### 3. Run Microservices
+Run each service in a **separate terminal window** to monitor their logs independently.
+
+#### Terminal 1: Product Service
+start this first to initialize Kafka topics.
+```bash
+java -jar BackEnd/product_service/target/product-service-0.0.1-SNAPSHOT.jar
+```
+
+#### Terminal 2: AI Service
+Starts the AI consumer for product encoding.
+```bash
+java -jar BackEnd/ai_service/target/ai-service-0.0.1-SNAPSHOT.jar
+```
+
+#### Terminal 3: Cart Service
+```bash
+java -jar BackEnd/cart_service/target/cart-service-0.0.1-SNAPSHOT.jar
+```
+
+#### Terminal 4: Order Service
+```bash
+java -jar BackEnd/order_service/target/order-service-0.0.1-SNAPSHOT.jar
+```
+
+#### Terminal 5: API Gateway
+```bash
+java -jar BackEnd/api_gateway/target/api-gateway-0.0.1-SNAPSHOT.jar
+```
 
 ---
 
-## 🏗️ System Architecture
-<p align="center">
-  <img src="./docs/architecture.png" width="700" alt="System Architecture"/>
-  <br/>
-  <em>Figure: High-level system architecture</em>
-</p>
-<hr />
+## 🧪 Testing the Application
 
-## ⚙️ Features
-
-* 🧩 Modular microservices: API Gateway, Product Service, with plans for Cart, Order, etc.
-* ⚡ **Asynchronous event flow** via Kafka (event-driven architecture)
-* 🔒 **JWT-based authentication**
-* 🧠 **AI product assistant** using RAG and LLM orchestrator
-* 💳 **Payment gateway integration** (UPI, COD, Stripe/Razorpay)
-* 🧾 **Saga pattern for order flow** — ensures consistency across services
-* 🔍 **Full-text & vector search** using Elasticsearch and Milvus/Pinecone
-* 🧠 **Personalization engine** driven by real-time user events
-* 📊 **Monitoring stack** with Prometheus, Grafana & OpenTelemetry
-* 🚀 **CI/CD ready** (GitHub Actions + Docker + ArgoCD)
-
----
+For detailed instructions on testing API endpoints and verification steps, please refer to [TESTING.md](./TESTING.md).
 
 ## 🧰 Tech Stack
+- **Backend:** Spring Boot 3.2, Spring Cloud Gateway
+- **Data:** PostgreSQL, Redis (Reactive), Milvus (Vector DB)
+- **Messaging:** Apache Kafka (Event-driven)
+- **AI/RAG:** LangChain4j / Spring AI (Planned)
 
-**Frontend:**
+## 🐛 Troubleshooting
 
-* React, TailwindCSS, React Query, Zustand
-* React Native for mobile
+### **1. "FATAL: role 'user' does not exist"**
+**Cause:** Local PostgreSQL is running on port 5432, blocking Docker Postgres.
 
-**Backend (Spring Boot):**
-
-* Spring Boot (Java framework)
-* Spring Data JPA (Postgres ORM)
-* Redis (cache/sessions)
-* Spring Kafka (Kafka integration)
-* Spring Security (JWT authentication)
-
-**Infra & DevOps:**
-
-* Docker & Docker Compose
-* Kafka + Zookeeper (event streaming)
-* PostgreSQL & Redis
-* Prometheus, Grafana, ELK stack
-* GitHub Actions / ArgoCD for CI/CD
-
----
-
-## 🧱 Folder Structure
-
-```
-AskCart/
-├── BackEnd/
-│   ├── api_gateway/           # API Gateway microservice
-│   └── product_service/      # Product catalog microservice
-├── FrontEnd/
-│   ├── web/                  # React web app
-│   └── mobile/               # React Native app
-├── docs/                     # Architecture diagrams
-└── docker-compose.yml        # Kafka, Redis, Postgres setup
-
-```
-
----
-
-## 🏃‍♂️ Quick Start
-
-### 1. Clone and start infrastructure
-
+**Fix:**
 ```bash
-git clone https://github.com/HHrisHikesHH/AskCart.git
-cd AskCart
-docker-compose up -d --profile dev
+# Check what's using port 5432
+lsof -i :5432
+
+# Stop local Postgres (Mac)
+brew services stop postgresql@14
+
+# Restart Docker containers with fresh volumes
+docker compose down -v && docker compose --profile dev up -d
 ```
 
-This will start:
+---
 
-* Postgres on `localhost:5432`
-* Redis on `localhost:6379`
-* Kafka on `localhost:9092`
-* Zookeeper on `localhost:2181`
+### **2. API Gateway Returns 404 for All Endpoints**
+**Cause:** Gateway forwards full paths (e.g., `/api/products`) but services expect stripped paths (e.g., `/products`).
 
-### 2. Run Services Locally (Development)
+**Fix:** Ensure `StripPrefix=1` filter is configured for all routes in `BackEnd/api_gateway/src/main/resources/application.yml`:
+```yaml
+routes:
+  - id: product-service
+    uri: http://localhost:8001
+    predicates:
+      - Path=/api/products/**
+    filters:
+      - StripPrefix=1  # This removes '/api' from the path
+```
 
-Open api_gateway and product_service in IntelliJ.
-Set environment variable: SPRING_PROFILES_ACTIVE=docker.
-Run each service for hot reloading.
+---
 
-### 3. Run Full Application (Production)
-mvn clean package
-docker-compose up --build --profile prod
+### **3. Kafka Connection Refused / Timed Out**
+**Cause:** Services configured to use `localhost:9092`, but Kafka is accessible on `localhost:29092` for host connections.
 
+**Fix:** Update `application.yml` in each service:
+```yaml
+spring:
+  kafka:
+    bootstrap-servers: localhost:29092  # Not 9092!
+```
+
+---
+
+### **4. "relation 'products' does not exist"**
+**Cause:** R2DBC (reactive database driver) doesn't auto-create tables like JPA/Hibernate.
+
+**Fix:** Manually create the products table:
 ```bash
-API Gateway: http://localhost:8000
+docker exec -it askcart-postgres-1 psql -U user -d db -c "
+CREATE TABLE products (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(255),
+    description TEXT,
+    sku VARCHAR(255),
+    price DOUBLE PRECISION,
+    currency VARCHAR(10),
+    stock_quantity INTEGER,
+    category_id VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    version BIGINT DEFAULT 0
+);"
 ```
 
+---
+
+### **5. R2DBC "Connection Reset" Errors**
+**Cause:** R2DBC can have instability after Docker has been running for extended periods.
+
+**Fix:**
+1. Completely quit Docker Desktop
+2. Restart Docker Desktop
+3. Restart all containers:
+   ```bash
+   docker compose down -v
+   docker compose --profile dev up -d
+   ```
+4. Recreate database tables (see issue #4)
+5. Restart all Java services
+
+---
+
+### **6. Spring Boot Version Incompatibility**
+**Cause:** Spring Boot 3.5.6+ is incompatible with Spring Cloud Gateway dependencies.
+
+**Fix:** Use Spring Boot 3.2.11 in `pom.xml`:
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.11</version>
+</parent>
+```
+
+---
+
+### **General Docker Health Check**
+If services are behaving unexpectedly:
 ```bash
-Product Service: http://localhost:8001
+# Check all container statuses
+docker ps
+
+# Check specific container logs
+docker logs askcart-postgres-1 --tail 50
+docker logs askcart-kafka-1 --tail 50
+
+# Restart everything cleanly
+docker compose down -v
+docker compose --profile dev up -d
 ```
-# 📦 Environment Variables
-
-
-
-Variable
-Description
-Default
-
-
-
-SPRING_DATASOURCE_URL
-Postgres connection string
-jdbc:postgresql://postgres:5432/db
-
-
-SPRING_KAFKA_BOOTSTRAP
-Kafka broker address
-kafka:9092
-
-
-SPRING_REDIS_HOST
-Redis host
-redis
-
-
-JWT_SECRET
-Secret for JWT auth
-changeme
-
-
-Configure in application.yml for each service or via environment variables.
-
-## 🧮 Event Flow Example (Order Saga)
-
-1. **Order Created** → `order_created` event emitted
-2. **Inventory Service** reserves stock → `inventory_reserved`
-3. **Payments Service** charges payment → `payment_succeeded`
-4. **Order Service** updates status → `order_confirmed`
-5. **Notification Service** sends confirmation → `user_notifications`
-
-If any step fails, compensating events (`inventory_released`, `order_cancelled`) restore consistency.
-
----
-
-## 🧩 Microservices Overview
-
-| Service             | Responsibility         | DB             | Key Topics                                            |
-| ------------------- | ---------------------- | -------------- | ----------------------------------------------------- |
-| **Product**         | Product catalog CRUD   | Postgres       | `product_created`, `product_updated`                  |
-| **Cart**            | Cart & session state   | Redis/Postgres | `cart_updated`                                        |
-| **Order**           | Order lifecycle + saga | Postgres       | `order_created`, `order_confirmed`, `order_cancelled` |
-| **Inventory**       | Stock reservation      | Postgres       | `inventory_reserved`, `inventory_released`            |
-| **Payments**        | Payment handling       | None           | `payment_succeeded`, `payment_failed`                 |
-| **Notification**    | Email/SMS push         | None           | `user_notifications`                                  |
-| **Personalization** | Recommendations        | Redis          | Consumes all user events                              |
-
----
-
-## 🧠 AI & RAG Layer
-
-The **LLM Orchestrator** connects product search, FAQs, and reviews to an external LLM API (e.g., OpenAI, Anthropic).
-
-* Uses **vector embeddings** stored in **Milvus/Pinecone**
-* Documents stored in **S3 / MinIO**
-* Implements a **RAG pipeline** (Retrieve → Augment → Generate)
-
----
-
-## 🔍 Monitoring & Observability
-
-* **Prometheus** → Metrics collection
-* **Grafana** → Dashboards
-* **OpenTelemetry** → Distributed tracing
-* **ELK / OpenSearch** → Centralized logs
-
----
-
-## 🧪 Testing
-```bash
-mvn test
-```
-
-Tests include:
-
-* CRUD and API route tests
-* Event emission/consumption mocks
-* Saga flow simulations
-* Integration tests using Docker Compose
-
----
-
-## 🚀 Deployment
-
-* Each microservice is containerized via Dockerfile
-* GitHub Actions runs tests & builds images
-* ArgoCD or Helm manages deployment to Kubernetes
-
----
-
-## 🤝 Contributing
-
-1. Fork the repo & create a feature branch
-2. Run tests and lint (mvn checkstyle:check, mvn test)
-3. Open a PR with clear commit messages
-
----
-
-## 📜 License
-
-MIT License — feel free to use and modify for your own learning or projects.
-
----
-
-## 💡 Future Enhancements
-
-* Add more microservices (Cart, Order, Inventory, etc.)
-* Improve AI Orchestrator (multi-turn chat + semantic search)
-* Integrate vector embeddings for user behavior
-* Add OpenTelemetry tracing in Kafka event headers
-* CI/CD auto-scaling with Argo Rollouts

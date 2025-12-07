@@ -13,13 +13,16 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.6</version>
+        <version>3.2.11</version>
         <relativePath/>
     </parent>
 
     <modules>
         <module>BackEnd/api_gateway</module>
         <module>BackEnd/product_service</module>
+        <module>BackEnd/cart_service</module>
+        <module>BackEnd/order_service</module>
+        <module>BackEnd/ai_service</module>
     </modules>
 
     <dependencyManagement>

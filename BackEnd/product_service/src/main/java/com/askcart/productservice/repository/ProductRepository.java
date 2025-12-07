@@ -1,11 +1,8 @@
 package com.askcart.productservice.repository;
 
 import com.askcart.productservice.model.Product;
-import org.springframework.data.r2dbc.repository.R2dbcRepository;
-import reactor.core.publisher.Mono;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import java.util.UUID;
 
-public interface ProductRepository extends R2dbcRepository<Product, Long> {
-    Mono<Product> findById(Long id);
-
-    Mono<Void> deleteById(Long id);
+public interface ProductRepository extends ReactiveCrudRepository<Product, UUID> {
 }

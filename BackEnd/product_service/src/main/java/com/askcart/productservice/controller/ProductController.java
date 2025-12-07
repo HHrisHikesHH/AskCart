@@ -1,10 +1,13 @@
 package com.askcart.productservice.controller;
 
-import com.askcart.productservice.model.Product;
+import com.askcart.productservice.dto.ProductRequest;
+import com.askcart.productservice.dto.ProductResponse;
 import com.askcart.productservice.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
@@ -16,13 +19,13 @@ public class ProductController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<Product>> create(@RequestBody Product product) {
-        return service.createProduct(product)
+    public Mono<ResponseEntity<ProductResponse>> create(@RequestBody ProductRequest request) {
+        return service.createProduct(request)
                 .map(saved -> ResponseEntity.ok(saved));
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Product>> get(@PathVariable Long id) {
+    public Mono<ResponseEntity<ProductResponse>> get(@PathVariable UUID id) {
         return service.getProduct(id)
                 .map(product -> ResponseEntity.ok(product))
                 .defaultIfEmpty(ResponseEntity.notFound().build());

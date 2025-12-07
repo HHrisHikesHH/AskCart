@@ -69,3 +69,5 @@ docker-compose.override.yml
 target/
 
 .github/copilot-instructions.md
+
+.idea/

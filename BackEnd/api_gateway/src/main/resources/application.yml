@@ -1,37 +1,108 @@
+# =========================
+# 🚪 API GATEWAY SERVICE
+# =========================
 server:
   port: 8000
+  netty:
+    connection-timeout: 2000
+
 spring:
   application:
     name: api-gateway
+  
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 5s
+        
+      routes:
+        - id: product-service
+          uri: http://localhost:8001
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=1
+        - id: cart-service
+          uri: http://localhost:8002
+          predicates:
+            - Path=/api/cart/**
+          filters:
+            - StripPrefix=1
+        - id: order-service
+          uri: http://localhost:8003
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=1
+        - id: ai-service
+          uri: http://localhost:8004
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=1
+
+
   r2dbc:
-    url: r2dbc:postgresql://postgres:5432/db
+    # 🔧 For local development
+    url: r2dbc:postgresql://localhost:5432/db
+
+    # 🐳 For Docker / Production (uncomment when deploying)
+    # url: r2dbc:postgresql://postgres:5432/db
+
     username: user
     password: pass
+
   data:
     redis:
-      host: redis
+      # 🔧 Local setup
+      host: localhost
+
+      # 🐳 Docker / Production (uncomment when deploying)
+      # host: redis
       port: 6379
-    kafka:
-      bootstrap-servers: kafka:9092
-      producer:
-        key-serializer: org.apache.kafka.common.serialization.StringSerializer
-        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      consumer:
-        group-id: askcart-group
-        auto-offset-reset: earliest
-        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-        value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-        properties:
-          spring:
-            json:
-              trusted:
-                packages: com.askcart.*
+
+  kafka:
+    # 🔧 Local setup
+    bootstrap-servers: localhost:9092
+
+    # 🐳 Docker / Production (uncomment when deploying)
+    # bootstrap-servers: kafka:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      group-id: askcart-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: com.askcart.*
+
   task:
     execution:
       pool:
         core-size: 2
         max-size: 10
         queue-capacity: 100
+
 management:
   endpoints:
     web:

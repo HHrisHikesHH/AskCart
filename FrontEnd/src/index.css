@@ -1,0 +1,54 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f8fafc;
+}
+
+/* Ant Design Customizations */
+.ant-btn-primary {
+  border: none;
+}
+
+.ant-input-affix-wrapper,
+.ant-input {
+  border: 1px solid #e2e8f0;
+}
+
+.ant-input-affix-wrapper:hover,
+.ant-input:hover {
+  border-color: #667eea;
+}
+
+.ant-input-affix-wrapper:focus,
+.ant-input:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.ant-form-item-explain-error {
+  font-size: 13px;
+}
+
+/* Loading spinner custom color */
+.ant-spin-dot-item {
+  background-color: #667eea;
+}
+
+/* Message custom styling */
+.ant-message-notice-content {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}

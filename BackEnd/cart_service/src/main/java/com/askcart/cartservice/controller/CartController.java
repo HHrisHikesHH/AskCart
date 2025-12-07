@@ -15,23 +15,27 @@ public class CartController {
         this.service = service;
     }
 
-    @GetMapping("/{userId}")
-    public Mono<Cart> getCart(@PathVariable String userId) {
+    @GetMapping
+    public Mono<Cart> getCart(@RequestHeader("X-User-Id") String userId) {
         return service.getCart(userId);
     }
 
-    @PostMapping("/{userId}/items")
-    public Mono<Cart> addItem(@PathVariable String userId, @RequestBody CartItem item) {
+    @PostMapping("/items")
+    public Mono<Cart> addItem(
+            @RequestHeader("X-User-Id") String userId,
+            @RequestBody CartItem item) {
         return service.addItem(userId, item);
     }
 
-    @DeleteMapping("/{userId}/items/{productId}")
-    public Mono<Cart> removeItem(@PathVariable String userId, @PathVariable String productId) {
+    @DeleteMapping("/items/{productId}")
+    public Mono<Cart> removeItem(
+            @RequestHeader("X-User-Id") String userId,
+            @PathVariable String productId) {
         return service.removeItem(userId, productId);
     }
 
-    @DeleteMapping("/{userId}")
-    public Mono<Void> clearCart(@PathVariable String userId) {
+    @DeleteMapping
+    public Mono<Void> clearCart(@RequestHeader("X-User-Id") String userId) {
         return service.clearCart(userId);
     }
 }

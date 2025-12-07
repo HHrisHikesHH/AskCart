@@ -23,6 +23,7 @@
         <module>BackEnd/cart_service</module>
         <module>BackEnd/order_service</module>
         <module>BackEnd/ai_service</module>
+        <module>BackEnd/authService</module>
     </modules>
 
     <dependencyManagement>

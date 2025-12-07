@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Service
 public class OrderService {
@@ -19,13 +19,13 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(OrderRequest request) {
+    public Order createOrder(Long userId, OrderRequest request) {
         Order order = new Order();
-        order.setUserId(request.getUserId());
+        order.setUserId(userId);
         order.setStatus("CREATED");
-        
+
         BigDecimal total = BigDecimal.ZERO;
-        
+
         for (var itemReq : request.getItems()) {
             OrderItem item = OrderItem.builder()
                     .productId(itemReq.getProductId())
@@ -37,12 +37,16 @@ public class OrderService {
             order.getItems().add(item);
             total = total.add(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
         }
-        
+
         order.setTotalAmount(total);
-        
+
         // Save to DB
         return repository.save(order);
-        
+
         // TODO: Emit OrderCreatedEvent via Kafka for Saga
+    }
+
+    public List<Order> getOrdersByUserId(Long userId) {
+        return repository.findByUserId(userId);
     }
 }

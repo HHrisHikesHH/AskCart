@@ -1,8 +1,19 @@
-import { RouterProvider } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
 import { ConfigProvider, theme } from "antd";
-import router from "./router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "./contexts/AuthContext";
+import { CartProvider } from "./contexts/CartContext";
+import { UIProvider } from "./contexts/UIContext";
+import Router from "./router";
 import "./App.css";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
@@ -16,9 +27,15 @@ function App() {
         },
       }}
     >
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <UIProvider>
+        <AuthProvider>
+          <CartProvider>
+            <QueryClientProvider client={queryClient}>
+              <Router />
+            </QueryClientProvider>
+          </CartProvider>
+        </AuthProvider>
+      </UIProvider>
     </ConfigProvider>
   );
 }

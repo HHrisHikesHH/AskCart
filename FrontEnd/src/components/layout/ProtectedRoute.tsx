@@ -1,0 +1,32 @@
+import type { ReactNode } from 'react';
+import { useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
+import { Spin } from 'antd';
+import { useAuth } from '../../contexts/AuthContext';
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+        }}
+      >
+        <Spin size="large" tip="Loading..." />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  return children;
+};
+
+export default ProtectedRoute;

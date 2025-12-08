@@ -25,7 +25,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private UUID userId;
+    private Long userId;
 
     private String status; // CREATED, CONFIRMED, CANCELLED
 
@@ -36,7 +36,7 @@ public class Order {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-    
+
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

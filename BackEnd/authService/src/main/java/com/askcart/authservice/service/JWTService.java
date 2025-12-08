@@ -23,9 +23,10 @@ public class JWTService {
     @Value("${jwt.expiration:300000}")
     private long jwtExpirationMs;
 
-    public String generateToken(String username) {
+    public String generateToken(String username, Long userId) {
 
         Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId.toString());
 
         return Jwts.builder()
                 .claims()
@@ -46,6 +47,11 @@ public class JWTService {
 
     public String extractUserName(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public Long extractUserId(String token) {
+        String userIdStr = extractClaim(token, claims -> claims.get("userId", String.class));
+        return userIdStr != null ? Long.parseLong(userIdStr) : null;
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {

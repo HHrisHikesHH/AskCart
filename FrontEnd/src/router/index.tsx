@@ -1,18 +1,39 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import LandingPage from "@/pages/Landing";
-import authRoutes from "@/router/authRoutes";
-import homeRoutes from "@/router/homeRoutes";
+import LoginPage from "@/pages/Login";
+import RegisterPage from "@/pages/Register";
+import LogoutPage from "@/pages/Logout";
+import HomePage from "@/pages/Home";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <LandingPage />,
   },
-  ...authRoutes,
-  ...homeRoutes,
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+  {
+    path: "/logout",
+    element: <LogoutPage />,
+  },
+  {
+    path: "/home",
+    element: (
+      <ProtectedRoute>
+        <HomePage />
+      </ProtectedRoute>
+    ),
+  },
   {
     path: "*",
-    element: <div>404 Not found.</div>,
+    element: <Navigate to="/" replace />,
   },
 ]);
 

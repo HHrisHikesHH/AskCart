@@ -6,6 +6,8 @@ import com.askcart.orderservice.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
@@ -16,7 +18,17 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
-        return ResponseEntity.ok(service.createOrder(request));
+    public ResponseEntity<Order> createOrder(
+            @RequestHeader("X-User-Id") String userIdStr,
+            @RequestBody OrderRequest request) {
+        Long userId = Long.parseLong(userIdStr);
+        return ResponseEntity.ok(service.createOrder(userId, request));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Order>> getUserOrders(
+            @RequestHeader("X-User-Id") String userIdStr) {
+        Long userId = Long.parseLong(userIdStr);
+        return ResponseEntity.ok(service.getOrdersByUserId(userId));
     }
 }

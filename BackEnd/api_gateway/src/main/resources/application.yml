@@ -15,7 +15,9 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "*"
+            allowedOrigins:
+              - "http://localhost:5173"
+              - "http://localhost:3000"
             allowedMethods:
               - GET
               - POST
@@ -23,6 +25,7 @@ spring:
               - DELETE
               - OPTIONS
             allowedHeaders: "*"
+            allowCredentials: true  # Required for cookies
       
       httpclient:
         connect-timeout: 1000
@@ -53,6 +56,12 @@ spring:
             - Path=/api/ai/**
           filters:
             - StripPrefix=1
+        - id: auth-service
+          uri: http://localhost:8005
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=2
 
 
   r2dbc:
@@ -114,5 +123,10 @@ management:
 logging:
   level:
     com.askcart: DEBUG
+    org.springframework.cloud.gateway: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# JWT Configuration (must match auth-service)
+jwt:
+  secret: ${JWT_SECRET:YXNrY2FydC1kZWZhdWx0LXNlY3JldC1rZXktcGxlYXNlLWNoYW5nZS1pbi1wcm9kdWN0aW9uLW1pbi0yNTYtYml0cw==}

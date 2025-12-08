@@ -1,4 +1,5 @@
 import { Button, Col, Input, Layout, Row, Typography } from "antd";
+import { useNavigate } from "react-router-dom";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -9,6 +10,8 @@ const buttonStyle = {
 };
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+
   return (
     <Layout>
       <Header style={{ backgroundColor: "white", padding: "0 1.25rem" }}>
@@ -19,10 +22,18 @@ export default function LandingPage() {
             </Title>
           </Col>
           <Col>
-            <Button type="primary" style={buttonStyle}>
+            <Button 
+              type="primary" 
+              style={buttonStyle}
+              onClick={() => navigate('/login')}
+            >
               Login
             </Button>
-            <Button type="default" style={buttonStyle}>
+            <Button 
+              type="default" 
+              style={buttonStyle}
+              onClick={() => navigate('/register')}
+            >
               Sign Up
             </Button>
           </Col>

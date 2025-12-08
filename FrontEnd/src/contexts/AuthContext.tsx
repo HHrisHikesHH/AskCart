@@ -1,94 +1,125 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import api from '../utils/api';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { message } from 'antd';
+import authAPI from '../api/auth';
 
 interface User {
-  id: number;
-  username: string;
-  email: string;
+  id?: number;
+  name?: string;
+  email?: string;
+  username?: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  error: string | null;
+  login: (email: string, password: string) => Promise<User>;
+  register: (userData: any) => Promise<User>;
   logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const checkAuth = async () => {
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          const response = await authAPI.me();
+          setUser(response.data);
+          setIsAuthenticated(true);
+        } catch (err) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          setIsAuthenticated(false);
+        }
+      }
+      setLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<User> => {
+    setLoading(true);
+    setError(null);
     try {
-      console.log('[AuthContext] checkAuth: Fetching /auth/me');
-      const response = await api.get('/auth/me');
-      console.log('[AuthContext] checkAuth: Response received:', response.data);
-      setUser(response.data);
-    } catch (error) {
-      console.error('[AuthContext] checkAuth: Failed:', error);
-      setUser(null);
+      const response = await authAPI.login(email, password);
+      const { access_token, refresh_token, user: userData } = response.data;
+
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
+      setUser(userData);
+      setIsAuthenticated(true);
+      message.success('Login successful!');
+      return userData;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Login failed';
+      setError(errorMessage);
+      message.error(errorMessage);
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    // Restore token from localStorage
-    const token = localStorage.getItem('token');
-    if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
-    checkAuth();
-  }, []);
+  const register = async (userData: any): Promise<User> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authAPI.register(userData);
+      const { access_token, refresh_token, user: newUser } = response.data;
 
-  const login = async (username: string, password: string) => {
-    console.log('[AuthContext] Login attempt for:', username);
-    const response = await api.post('/auth/login', { username, password });
-    console.log('[AuthContext] Login response:', response.data);
-    
-    if (response.data.status === 'success') {
-      // Manual token fallback mechanism
-      const token = response.data.data?.token;
-      console.log('[AuthContext] Extracted token:', token ? 'Present' : 'Missing');
-      
-      if (token) {
-         // Default to Bearer scheme
-         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-         localStorage.setItem('token', token);
-         console.log('[AuthContext] Token saved to localStorage and header set');
-      }
-      
-      console.log('[AuthContext] Calling checkAuth...');
-      await checkAuth(); // Fetch user data after login
-      console.log('[AuthContext] checkAuth completed');
-    } else {
-      throw new Error('Login failed');
-    }
-  };
-
-  const register = async (username: string, email: string, password: string) => {
-    const response = await api.post('/auth/register', { username, email, password });
-    if (response.data.status === 'success') {
-      // Auto-login after registration
-      await login(username, password);
-    } else {
-      throw new Error('Registration failed');
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
+      setUser(newUser);
+      setIsAuthenticated(true);
+      message.success('Registration successful!');
+      return newUser;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Registration failed';
+      setError(errorMessage);
+      message.error(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async () => {
-    await api.post('/auth/logout');
-    localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
-    setUser(null);
+    try {
+      await authAPI.logout();
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      setUser(null);
+      setIsAuthenticated(false);
+      message.success('Logged out successfully');
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    isAuthenticated,
+    loading,
+    error,
+    login,
+    register,
+    logout,
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -96,8 +127,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 };
+
+export default AuthContext;

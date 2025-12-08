@@ -15,7 +15,7 @@ export default function RegisterPage() {
   const onFinish = async (values: { username: string; email: string; password: string }) => {
     setLoading(true);
     try {
-      await register(values.username, values.email, values.password);
+      await register(values);
       message.success('Registration successful! Welcome to AskCart');
       navigate('/home');
     } catch (error) {
